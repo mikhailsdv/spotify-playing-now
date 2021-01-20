@@ -13,7 +13,7 @@ const spotifyApi = new SpotifyWebApi({
 	clientId: config.clientId,
 	clientSecret: config.clientSecret,
 });
-spotifyApi.setAccessToken(db.get("accsessToken"))
+spotifyApi.setAccessToken(db.get("accessToken"))
 
 let prevSong = {//template, example
 	name: null,
@@ -100,7 +100,7 @@ const getMyCurrentPlaybackState = async () => {
 				let data = await spotifyApi.refreshAccessToken()
 				let token = data.body["access_token"]
 				spotifyApi.setAccessToken(token);
-				db.set("accsessToken", token)
+				db.set("accessToken", token)
 				log.green("The access token has been refreshed!");
 				log.def(token)
 				//retrying
