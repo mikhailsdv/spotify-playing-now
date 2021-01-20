@@ -36,4 +36,5 @@ npm i
 Фидбэк
 ---
 Если вы обнаружите сбои в работе скрипта, пишите мне в Телеграм [@mikhailsdv](https://t.me/mikhailsdv).
+
 Мой Телеграм-канал [@FilteredInternet](https://t.me/FilteredInternet).
