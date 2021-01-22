@@ -1,0 +1,2 @@
+node auth
+pause

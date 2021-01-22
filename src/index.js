@@ -4,7 +4,7 @@ const db = require("./db.js")
 const { answer, msToTime } = require("./functions")
 const { Telegraf, Telegram } = require("telegraf")
 const qs = require("querystring")
-const SpotifyWebApi = require("spotify-web-api-node");
+const SpotifyWebApi = require("spotify-web-api-node")
 
 const telegram = new Telegram(config.botToken)
 const bot = new Telegraf(config.botToken)
@@ -12,8 +12,8 @@ const bot = new Telegraf(config.botToken)
 const spotifyApi = new SpotifyWebApi({
 	clientId: config.clientId,
 	clientSecret: config.clientSecret,
-});
-spotifyApi.setAccessToken(db.get("accessToken"))
+	redirectUri: config.redirectUri,
+})
 
 let prevSong = {//template, example
 	name: null,
@@ -123,6 +123,28 @@ const getMyCurrentPlaybackState = async () => {
 }
 
 const start = async () => {
+	if (!db.get("accessToken")) {
+		if (config.code) {
+			spotifyApi.authorizationCodeGrant(config.code).then(
+				response => {
+					console.log(response.body)
+					db.set("accessToken", response.body.access_token)
+					db.set("refreshToken", response.body.refresh_token)
+					spotifyApi.setAccessToken(response.body.access_token)
+					spotifyApi.setRefreshToken(response.body.refresh_token)
+				},
+				err => log.red(err)
+			)
+		}
+		else {
+			return log.red("Error: No accessToken and code!")
+		}
+	}
+	else {
+		spotifyApi.setAccessToken(db.get("accessToken"))
+		spotifyApi.setRefreshToken(db.get("refreshToken"))
+	}
+	
 	let messageId = db.get("messageId")
 	const editMessage = async () => {
 		let playingNow = await getMyCurrentPlaybackState()
