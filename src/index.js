@@ -127,7 +127,6 @@ const start = async () => {
 		if (config.code) {
 			spotifyApi.authorizationCodeGrant(config.code).then(
 				response => {
-					console.log(response.body)
 					db.set("accessToken", response.body.access_token)
 					db.set("refreshToken", response.body.refresh_token)
 					spotifyApi.setAccessToken(response.body.access_token)
