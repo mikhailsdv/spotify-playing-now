@@ -9,8 +9,11 @@
   "author": "Misha Saidov",
   "license": "MIT",
   "dependencies": {
-    "canvas": "^2.6.1",
     "node-color-log": "^5.1.0",
+    "prompts": "^2.4.2",
+    "puppeteer": "^11.0.0",
+    "puppeteer-extra": "^3.2.3",
+    "puppeteer-extra-plugin-stealth": "^2.9.0",
     "spotify-web-api-node": "^4.0.0",
     "telegraf": "^3.38.0"
   }
