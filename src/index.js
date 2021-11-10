@@ -1,21 +1,14 @@
-const config = require("./config")
-const log = require("./log")
-const db = require("./db.js")
-const { answer, msToTime } = require("./functions")
+const { config, log, answer, msToTime } = require("./utils.js")
 const { Telegraf, Telegram } = require("telegraf")
-const qs = require("querystring")
-const SpotifyWebApi = require("spotify-web-api-node")
+const spotifyApi = require("./spotify-api-module")
 
-const telegram = new Telegram(config.botToken)
-const bot = new Telegraf(config.botToken)
+const configVars = config.read()
 
-const spotifyApi = new SpotifyWebApi({
-	clientId: config.clientId,
-	clientSecret: config.clientSecret,
-	redirectUri: config.redirectUri,
-})
+const telegram = new Telegram(configVars.botToken)
+const bot = new Telegraf(configVars.botToken)
 
 let prevSong = {//template, example
+	id: null,
 	name: null,
 	artists: null,
 	image: null,
@@ -25,15 +18,21 @@ let prevSong = {//template, example
 	update: null,
 }
 
-const getCaption = (name, artists, progress, duration) => `🎵 *${name}* — ${artists} \\[${progress}/${duration}]`
-const getReplyMarkup = url => ({
+const getCaption = (name, artists, progress, duration, isPaused) => `${isPaused ? "⏸" : "🎵"} *${name}* — ${artists} ${isPaused ? "" : `\\[${progress}/${duration}]`}`
+const getSongLog = (name, artists) => `${name} — ${artists}`
+const getReplyMarkup = ({url, id}) => ({
 	inline_keyboard: [[
 		{
-			text: "Открыть в Spotify",
+			text: "Spotify",
 			url: url
+		},
+		{
+			text: "Другие сервисы",
+			url: `https://song.link/s/${id}`
 		}
 	]]
 })
+
 const getMyCurrentPlaybackState = async () => {
 	try {
 		let data = await spotifyApi.getMyCurrentPlaybackState({})
@@ -42,37 +41,28 @@ const getMyCurrentPlaybackState = async () => {
 			let artists = body.item.artists.map(artist => artist.name).join(", ")
 			let progress = msToTime(body.progress_ms)
 			let duration = msToTime(body.item.duration_ms)
-			//console.log(body)
-			if (
-				prevSong.artists !== artists ||
-				prevSong.name !== body.item.name
-			) {
+			if (prevSong.id !== body.item.id) {
 				prevSong = {
+					id: body.item.id,
 					name: body.item.name,
 					artists: artists,
 					image: body.item.album.images[0].url,
 					url: body.item.external_urls.spotify,
 					duration: duration,
 					progress: progress,
-					update: "image",
+					update: "all",
 				}
 				return answer(true, prevSong) //actually current song
 			}
 			else if (
-				prevSong.artists === artists &&
-				prevSong.name === body.item.name &&
-				(
-					prevSong.progress !== progress ||
-					prevSong.duration !== duration
-				)
+				prevSong.id === body.item.id &&
+				prevSong.progress !== progress
 			) {
 				prevSong.update = "caption"
-				prevSong.duration = duration
 				prevSong.progress = progress
 				return answer(true, prevSong) //actually current song
 			}
 			else {
-				prevSong.update = false
 				return answer(false, {
 					message: "paused",
 					data: data,
@@ -95,123 +85,95 @@ const getMyCurrentPlaybackState = async () => {
 		}
 	}
 	catch(err) {
-		if (err.statusCode === 401) {
-			try {
-				let data = await spotifyApi.refreshAccessToken()
-				let token = data.body["access_token"]
-				spotifyApi.setAccessToken(token);
-				db.set("accessToken", token)
-				log.green("The access token has been refreshed!");
-				log.def(token)
-				//retrying
-				return await getMyCurrentPlaybackState()
-			}
-			catch(err) {
-				return answer(false, {
-					message: "Could not refresh access token",
-					data: err
-				})
-			}
-		}
-		else {//can't fix
-			return answer(false, {
-				message: "Something went wrong",
-				data: err
-			})
-		}
+		return answer(false, {
+			message: "Something went wrong",
+			data: err.toString()
+		})
 	}
 }
 
-const start = async () => {
-	if (!db.get("accessToken")) {
-		if (config.code) {
-			spotifyApi.authorizationCodeGrant(config.code).then(
-				response => {
-					db.set("accessToken", response.body.access_token)
-					db.set("refreshToken", response.body.refresh_token)
-					spotifyApi.setAccessToken(response.body.access_token)
-					spotifyApi.setRefreshToken(response.body.refresh_token)
-				},
-				err => log.red(err)
-			)
-		}
-		else {
-			return log.red("Error: No accessToken and code!")
-		}
-	}
-	else {
-		spotifyApi.setAccessToken(db.get("accessToken"))
-		spotifyApi.setRefreshToken(db.get("refreshToken"))
-	}
-	
-	let messageId = db.get("messageId")
+const start = () => {
+	let messageId = configVars.messageId
+	let wasPaused = false
 	const editMessage = async () => {
-		let playingNow = await getMyCurrentPlaybackState()
+		const playingNow = await getMyCurrentPlaybackState()
 		if (playingNow.status) {
 			let song = playingNow.data
-			if (!song.update) {
-				setTimeout(editMessage, config.updateDelay)
-				return
-			}
 			if (messageId) {
 				try {
-					if (song.update === "image") {
-						log.def(`${song.name} — ${song.artists}`);
+					if (song.update === "all") {
+						log.def(getSongLog(song.name, song.artists))
 						await telegram.editMessageMedia(
-							config.chanelId,
+							configVars.chanelId,
 							messageId,
 							null,
 							{
 								type: "photo",
 								media: song.image,
-								caption: getCaption(song.name, song.artists, song.progress, song.duration),
+								caption: getCaption(song.name, song.artists, song.progress, song.duration, false),
 							},
 							{
-								reply_markup: getReplyMarkup(song.url),
+								reply_markup: getReplyMarkup(song),
 								parse_mode: "Markdown",
 							}
 						)
 					}
 					else if (song.update === "caption") {
+						wasPaused && log.def(getSongLog(song.name, song.artists))
 						await telegram.editMessageCaption(
-							config.chanelId,
+							configVars.chanelId,
 							messageId,
 							null,
-							getCaption(song.name, song.artists, song.progress, song.duration),
+							getCaption(song.name, song.artists, song.progress, song.duration, false),
 							{
-								reply_markup: getReplyMarkup(song.url),
+								reply_markup: getReplyMarkup(song),
 								parse_mode: "Markdown",
 							}
 						)
 					}
-					setTimeout(editMessage, config.updateDelay)
+					setTimeout(editMessage, configVars.updateDelay)
 				}
 				catch(err) {
-					log.red(err)
-					log.def("retrying...")
-					setTimeout(editMessage, config.updateDelay)
+					console.log(err)
+					log.def(`Retrying after ${configVars.retryDelay}ms...`)
+					setTimeout(editMessage, configVars.updateDelay)
 				}
 			}
 			else {
-				let message = await telegram.sendPhoto(config.chanelId, song.image, {
-					caption: getCaption(song.name, song.artists, song.progress, song.duration),
+				log.def(getSongLog(song.name, song.artists))
+				let message = await telegram.sendPhoto(configVars.chanelId, song.image, {
+					caption: getCaption(song.name, song.artists, song.progress, song.duration, false),
 					parse_mode: "Markdown",
-					reply_markup: getReplyMarkup(song.url)
+					reply_markup: getReplyMarkup(song)
 				})
 				messageId = message.message_id
-				db.set("messageId", messageId)
-				setTimeout(editMessage, config.updateDelay)
+				config.set("messageId", messageId)
+				setTimeout(editMessage, configVars.updateDelay)
 			}
+			wasPaused = false
 		}
 		else if (playingNow.error.message === "paused") {
-			log.def("paused")
-			setTimeout(editMessage, config.pauseDelay)
+			if (!wasPaused) {
+				log.def("Paused.")
+				wasPaused = true
+				prevSong.id && await telegram.editMessageCaption(
+					configVars.chanelId,
+					messageId,
+					null,
+					getCaption(prevSong.name, prevSong.artists, null, null, true),
+					{
+						reply_markup: getReplyMarkup(prevSong),
+						parse_mode: "Markdown",
+					}
+				)
+			}
+			setTimeout(editMessage, configVars.pauseDelay)
 		}
 		else {
 			log.red(playingNow.error.message)
 			log.red(playingNow.error.data)
-			log.def("retrying...")
-			setTimeout(editMessage, config.retryDelay)
+			log.def(`Retrying after ${configVars.retryDelay}ms...`)
+			setTimeout(editMessage, configVars.retryDelay)
 		}
 	}
 	editMessage()
