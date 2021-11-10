@@ -1,3 +1,3 @@
 # dependencies
 /node_modules
-/src/config.test.js
+/src/config.test.json
