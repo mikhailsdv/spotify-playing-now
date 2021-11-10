@@ -1,2 +1,2 @@
-node inint
+node init
 pause
