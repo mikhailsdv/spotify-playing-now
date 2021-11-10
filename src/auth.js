@@ -1,11 +1,37 @@
-const config = require("./config")
-const log = require("./log")
-const SpotifyWebApi = require("spotify-web-api-node")
+const puppeteer = require("puppeteer-extra")
+const StealthPlugin = require("puppeteer-extra-plugin-stealth")
+puppeteer.use(StealthPlugin())
 
-const spotifyApi = new SpotifyWebApi({
-	clientId: config.clientId,
-	redirectUri: config.redirectUri,
+const auth = spotifyApi => new Promise(resolve => {
+	;(async () => {
+		try {
+			const url = await spotifyApi.createAuthorizeURL(["user-read-playback-state"])
+			const browser = await puppeteer.launch({ headless: false })
+			const page = await browser.newPage()
+			await page.goto(url, {
+				waitUntil: "networkidle2",
+			})
+
+			page.on("framenavigated", async frame => {
+				const frameUrl = frame.url()
+				if (/https:\/\/example\.com\/\?code/.test(frameUrl)) {
+					const code = frame.url().replace(/.+?\/\?code=/, "")
+					browser.close()
+
+					const response = await spotifyApi.authorizationCodeGrant(code)
+					const result = {
+						accessToken: response.body.access_token,
+						refreshToken: response.body.refresh_token,
+					}
+					return resolve(result)
+				}
+			})
+		}
+		catch(err) {
+			console.log(err)
+			return resolve(false)
+		}
+	})()
 })
 
-const start = (process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open")
-require("child_process").exec(`${start} ${spotifyApi.createAuthorizeURL(["user-read-playback-state"]).replace(/&/g, "^&")}`)
+module.exports = auth
