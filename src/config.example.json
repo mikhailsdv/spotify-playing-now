@@ -1,0 +1,13 @@
+{
+	"chanelId": "",
+	"botToken": "",
+	"clientId": "",
+	"clientSecret": "",
+	"accessToken": "",
+	"refreshToken": "",
+	"redirectUri": "https://example.com/",
+	"updateDelay": 5000,
+	"pauseDelay": 10000,
+	"retryDelay": 3000,
+	"messageId": null
+}
