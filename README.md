@@ -32,5 +32,5 @@ If you close the console, the bot will stop updating your channel post. If you c
 
 ## Feedback
 
-If you find any errors in the script or inaccuracies in the instructions, open new issue or text me in Telegram [@mikhailsdv](https://t.me/mikhailsdv).  
+If you find any errors in the script or inaccuracies in the instructions, [open new issue](https://github.com/mikhailsdv/spotify-playing-now/issues/new) or text me in Telegram [@mikhailsdv](https://t.me/mikhailsdv).  
 Subscribe to my Telegram channel [@FilteredInternet](https://t.me/FilteredInternet).
