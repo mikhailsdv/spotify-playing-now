@@ -1,6 +1,6 @@
 # spotify-playing-now
 
-Create an auto-updating Telegram post that shows what you are currently listening to on Spotify.  
+Creates an auto-updating Telegram post that shows what you are currently listening to on Spotify.  
 You can see how it looks [here](https://t.me/FilteredInternet/241), more details [here](https://t.me/FilteredInternet/242).
 
 ## Difficulty level
@@ -10,11 +10,11 @@ You can see how it looks [here](https://t.me/FilteredInternet/241), more details
 
 Before you start, I recommend that you read the instructions in full and proceed with an understanding of the complexity and your capabilities.
 
-## Procedure
+## Guide
 
 1. Download and install [Node.js](https://nodejs.org/en/download/).
-2. [Download project files](https://github.com/mikhailsdv/spotify-playing-now/archive/main.zip) and unzip to some folder on your hard drive. It is better that the path contains only Latin characters without spaces.
-3. Launch the terminal from the root directory of the unpacked archive and enter `npm i`. Press Enter and wait for the installation of dependencies to complete (3-10 minutes depending on the speed of the Internet).
+2. [Download project files](https://github.com/mikhailsdv/spotify-playing-now/archive/main.zip) and unzip to some folder on your hard drive (or just clone the repo). It is better that the path contains only Latin characters without spaces.
+3. Launch the terminal from the root directory of the unpacked archive and run `npm i`. Wait for the installation of dependencies to complete (3-10 minutes depending on the speed of the Internet).
 4. Go to the folder where you unpacked the archive from step 2 and run `node src/init`. The script will ask you to insert a channel or chat ID. Without closing the console, go to the next step.
 5. There are many different ways to find out the channel or chat ID. I will describe the simplest one: Add the bot [@myidbot](https://t.me/myidbot) to your chat or channel → send the command `/getgroupid@myidbot` → copy your Id (along with a minus, if any) → paste it to the open console and press Enter.
 6. The script will ask you to insert the bot token. To get a token, go to chat with [@BotFather](https://t.me/BotFather) and send the command `/newbot`. Following the instructions. Upon completion, [@BotFather](https://t.me/BotFather) will send you your bot token. Copy the token → paste it into the console and press Enter. After that, the script will ask you to insert the Client ID.
