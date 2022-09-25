@@ -10,7 +10,6 @@ puppeteer.use(StealthPlugin())
 
 if (!fs.existsSync(configDir)) {
 	fs.copyFileSync(path.resolve(__dirname, "./config.example.json"), configDir)
-	console.log("copy")
 }
 
 const env = config.read()
