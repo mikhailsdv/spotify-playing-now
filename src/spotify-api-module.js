@@ -1,5 +1,5 @@
 const SpotifyWebApi = require("spotify-web-api-node")
-const { config } = require("./utils.js")
+const {config} = require("./utils.js")
 
 const configVars = config.read()
 const spotifyApi = new SpotifyWebApi({
@@ -7,7 +7,7 @@ const spotifyApi = new SpotifyWebApi({
 	clientSecret: configVars.clientSecret,
 	redirectUri: configVars.redirectUri,
 	accessToken: configVars.accessToken,
-	refreshToken: configVars.refreshToken
+	refreshToken: configVars.refreshToken,
 })
 //setCredentials
 
@@ -19,8 +19,7 @@ const refreshAccessToken = async () => {
 		config.set("accessToken", token)
 		console.log("Access token has been successfully refreshed!")
 		return token
-	}
-	catch(err) {
+	} catch (err) {
 		console.log(err)
 		return false
 	}
@@ -32,26 +31,22 @@ for (const key in spotifyApi) {
 		spotifyApi_[key] = async (...args) => {
 			try {
 				return await spotifyApi[key](...args)
-			}
-			catch(err) {
+			} catch (err) {
 				if (err.statusCode === 401) {
 					const isTokenRefreshed = await refreshAccessToken()
 					if (isTokenRefreshed) {
 						return await spotifyApi[key](...args)
-					}
-					else {
+					} else {
 						console.log("Couldn't refresh token:", err)
 						return err
 					}
-				}
-				else {
+				} else {
 					console.log("Unknown error:", err)
 					return err
 				}
 			}
 		}
-	}
-	else {
+	} else {
 		spotifyApi_[key] = spotifyApi[key]
 	}
 }

@@ -1,41 +1,36 @@
 # spotify-playing-now
-Инструкция по созданию автоматически обновляемого поста в Телеграм, который показывает то, что вы сейчас слушаете в Spotify.  
-Как это выглядит можно посмотреть [здесь](https://t.me/FilteredInternet/241), подробнее [здесь](https://t.me/FilteredInternet/242).
 
-Уровень сложности
-----
-- Если вы имели опыт программирования: 🟢 easy;
-- Если вы не имели опыта программирования: 🟡 medium;
+Create an auto-updating Telegram post that shows what you are currently listening to on Spotify.  
+You can see how it looks [here](https://t.me/FilteredInternet/241), more details [here](https://t.me/FilteredInternet/242).
 
-Перед тем, как приступить к выполнению пунктов, рекомендую прочесть инструкцию полностью и приступать уже с понимание сложности и своих возможностей.
+## Difficulty level
 
-Порядок действий
----
-1. Скачайте и установите [Node.js](https://nodejs.org/en/download/).
-2. [Скачайте файлы проекта](https://github.com/mikhailsdv/spotify-playing-now/archive/main.zip) и распакуйте в какой-нибудь папке на жестком диске. Желательно чтобы путь содержал только латинские символы без пробелов.
-3. Запустите терминал из корневой директории распакованного архива и введите:
-```
-npm i
-```
-После чего нажмите Enter и дождитесь завершения установки зависимостей (3-10 мин в зависимости от скорости интернета). На Windows для запуска командной строки вы можете зайти в корневую директорию проекта и нажать в левом верхнем углу Файл → Запустить Windows PowerShell.
+-   If you had programming experience: 🟢 easy;
+-   If you have no programming experience: 🟡 medium;
 
-4. Перейдите в папку, куда вы распаковали архив из пункта 2 и запустите `init.cmd`. Скрипт попросит вас вставить ID канала или чата. Не закрывая консоль перейдите к следующему пункту.
-5. Есть много разных способов узнать ID канала или чата. Опишу самый простой: Добавьте бота [@myidbot](https://t.me/myidbot) в ваш чат или канал → отправьте команду `/getgroupid@myidbot` → скопируйте ваш Id (вместе с минусом, если есть) → вставьте его в открытую консоль и нажмите Enter.
-6. Скрипт попросит вставить токен бота. Чтобы получить токен, перейдите в чат с [@BotFather](https://t.me/BotFather) и отправьте команду `/newbot`. Следуя инструкции, придумайте любой ник и название для вашего бота. По завершению [@BotFather](https://t.me/BotFather) пришлет вам токен вашего бота. Скопируйте токен → вставьте его в консоль и нажмите Enter. После этого скрипт попросит вас вставить Client ID.
-7. Добавьте вашего бота из пункта 6 в ваш чат или канал.
-8. Перейдите по [этой ссылке](https://developer.spotify.com/dashboard/applications) (залогиньтесь, если потребуется).
-9. В вашем «Dashboard» нажмите на «CREATE AN APP».
-10. Введите любое название и описание приложения и поставьте все галочки, после чего нажмите «CREATE».
-11. Вы попали в кабинет только что созданного приложения. Нажмите «Edit Settings» → в поле Redirect URIs введите `https://example.com/` → нажмите «SAVE».
-12. Найдите на странице свой Client ID и скопируйте его → вставьте в консоль и нажмите Enter.
-13. Скрипт запросит ваш Client Secret. Вернитесь в браузер → нажмите Show Client Secret → скопируйте свой Client Secret → вставьте его в консоль и нажмите Enter.
-14. Скрипт предупредит вас, что сейчас откроется браузер. Нажмите Enter, войдите в аккаунт и предоставьте доступ. После чего браузер автоматически закроется и в консоли будет сообщение об успешной инициализации. Сразу после инициализации скрипт автоматически запустит основной скрипт. Не закрывайте консоль.
-15. Включите какую-нибудь песню в Spotify. Ваше устройство должно быть подключено к интернету. Если вы все сделали правильно, в вашем канале или чате должно появится то самое заветное сообщение от бота. Поздравляю, если у вас получилось 🎉 Это было не легко)
+Before you start, I recommend that you read the instructions in full and proceed with an understanding of the complexity and your capabilities.
 
-Если вы закроете консоль, то бот перестанет обновлять ваш пост на канале. Если вы закрыли консоль, то снова запустить бота можно просто запустив `/src/start.cmd`. Бот не будет присылать новое сообщение, а будет обновлять старое, поэтому желательно закрепить его. Иногда в консоли могут появляться ошибки. Если они не повторяются, то все норм.
+## Procedure
 
+1. Download and install [Node.js](https://nodejs.org/en/download/).
+2. [Download project files](https://github.com/mikhailsdv/spotify-playing-now/archive/main.zip) and unzip to some folder on your hard drive. It is better that the path contains only Latin characters without spaces.
+3. Launch the terminal from the root directory of the unpacked archive and enter `npm i`. Press Enter and wait for the installation of dependencies to complete (3-10 minutes depending on the speed of the Internet).
+4. Go to the folder where you unpacked the archive from step 2 and run `node src/init`. The script will ask you to insert a channel or chat ID. Without closing the console, go to the next step.
+5. There are many different ways to find out the channel or chat ID. I will describe the simplest one: Add the bot [@myidbot](https://t.me/myidbot) to your chat or channel → send the command `/getgroupid@myidbot` → copy your Id (along with a minus, if any) → paste it to the open console and press Enter.
+6. The script will ask you to insert the bot token. To get a token, go to chat with [@BotFather](https://t.me/BotFather) and send the command `/newbot`. Following the instructions. Upon completion, [@BotFather](https://t.me/BotFather) will send you your bot token. Copy the token → paste it into the console and press Enter. After that, the script will ask you to insert the Client ID.
+7. Add your bot from step 6 to your chat or channel.
+8. Go to [this link](https://developer.spotify.com/dashboard/applications) (login if required).
+9. In your "Dashboard" click on "CREATE AN APP".
+10. Enter any name and description of the application and check all the boxes, then click "CREATE".
+11. You are in the cabinet of the newly created application. Click "Edit Settings" → in the Redirect URIs field enter `https://example.com/` → click "SAVE".
+12. Find your Client ID on the page and copy it → paste it into the console and press Enter.
+13. The script will ask for your Client Secret. Return to the browser → click "Show Client Secret" → copy your Client Secret → paste it into the console and press Enter.
+14. The script will warn you that a browser will now open. Press Enter, sign in to your account and grant access. After that, the browser will automatically close and the console will display a message about successful initialization. Immediately after initialization, the script will automatically run the main script. Don't close the console.
+15. Play some song in Spotify. Your device must be connected to the internet. If you did everything right, that very cherished message from the bot should appear in your channel or chat. Congratulations if you succeeded 🎉 It was not easy 😁
 
-Фидбэк
----
-Если вы обнаружите сбои в работе скрипта или неточности в инструкции, пишите мне в Телеграм [@mikhailsdv](https://t.me/mikhailsdv).  
-Мой Телеграм-канал [@FilteredInternet](https://t.me/FilteredInternet).
+If you close the console, the bot will stop updating your channel post. If you closed the console, you can start the bot again by simply running `node src/index`. The bot won't send a new message, but will update the old one, so it is advisable to pin it. Sometimes errors can appear in the console. If they do not repeat, then everything is fine.
+
+## Feedback
+
+If you find any errors in the script or inaccuracies in the instructions, open new issue or text me in Telegram [@mikhailsdv](https://t.me/mikhailsdv).  
+Subscribe to my Telegram channel [@FilteredInternet](https://t.me/FilteredInternet).

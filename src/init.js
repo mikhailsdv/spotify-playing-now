@@ -1,67 +1,73 @@
-const {config} = require("./utils")
+const {config, configDir} = require("./utils")
 const prompts = require("prompts")
+const fs = require("fs")
+const path = require("path")
 const auth = require("./auth")
 const SpotifyWebApi = require("spotify-web-api-node")
 const puppeteer = require("puppeteer-extra")
 const StealthPlugin = require("puppeteer-extra-plugin-stealth")
 puppeteer.use(StealthPlugin())
-const redirectUri = "https://example.com/"
 
-const configVars = config.read()
+if (!fs.existsSync(configDir)) {
+	fs.copyFileSync(path.resolve(__dirname, "./config.example.json"), configDir)
+	console.log("copy")
+}
+
+const env = config.read()
 
 const questions = [
 	{
 		type: "text",
 		name: "chanelId",
-		message: "Вставьте ID вашего канала или чата:",
-		initial: configVars.chanelId || undefined,
+		message: "Insert your Telegram chat or channel ID:",
+		initial: env.chanelId || undefined,
 		callback: (prompt, answer) => config.set(prompt.name, answer.trim()),
 	},
 	{
 		type: "text",
 		name: "botToken",
-		message: "Вставьте токен вашего бота:",
-		initial: configVars.botToken || undefined,
+		message: "Insert your Telegram bot token:",
+		initial: env.botToken || undefined,
 		callback: (prompt, answer) => config.set(prompt.name, answer.trim()),
 	},
 	{
 		type: "text",
 		name: "clientId",
-		message: "Вставьте Client ID вашего приложения в Spotify:",
-		initial: configVars.clientId || undefined,
+		message: "Insert your Spotify app's Client ID:",
+		initial: env.clientId || undefined,
 		callback: (prompt, answer) => config.set(prompt.name, answer.trim()),
 	},
 	{
 		type: "text",
 		name: "clientSecret",
-		message: "Вставьте Client Secret вашего приложения в Spotify:",
-		initial: configVars.clientSecret || undefined,
+		message: "Insert your Spotify app's Client Secret:",
+		initial: env.clientSecret || undefined,
 		callback: (prompt, answer) => config.set(prompt.name, answer.trim()),
 	},
 	{
 		type: "confirm",
 		name: "browser",
 		initial: true,
-		message: "Сейчас откроется браузер. Войдите в свой аккаунт для завершения процесса инициализации. Нажмите Enter, чтобы продолжить.",
+		message:
+			"The browser is going to open. Log into you Spotify account to finish initialization. Press Enter to continue.",
 		callback: async (prompt, answer, answers) => {
 			if (answer !== true) {
-				console.log("Ок, отмена.")
+				console.log("Ok, aborting.")
 			}
 			const spotifyApi = new SpotifyWebApi({
 				clientId: answers.clientId,
 				clientSecret: answers.clientSecret,
-				redirectUri: redirectUri,
+				redirectUri: env.redirectUri,
 			})
 			const authData = await auth(spotifyApi)
 			if (authData) {
 				config.set("accessToken", authData.accessToken)
 				config.set("refreshToken", authData.refreshToken)
-			}
-			else {
-				console.log("Не удалось авторизоваться. Попробуйте еще раз.")
+			} else {
+				console.log("Couldn't authorize. Try again.")
 			}
 			return
-		}
+		},
 	},
 ]
 
@@ -77,14 +83,14 @@ const callbacks = (() => {
 })()
 
 ;(async () => {
-	const answers = await prompts(questions.slice(), {
+	await prompts(questions.slice(), {
 		onSubmit: async (prompt, answer, answers) => {
 			if (callbacks[prompt.name]) {
 				await callbacks[prompt.name](prompt, answer, answers)
 			}
 			return undefined
-		}
+		},
 	})
-	console.log("Инициализация завершена успешно! Запуск основного скрипта...")
+	console.log("Initialization successful! Staring main script...")
 	require("./index.js")
 })()

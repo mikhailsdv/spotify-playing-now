@@ -1,18 +1,18 @@
 const logger = require("node-color-log")
 const fs = require("fs")
-//const configFile = "./config.test.json"
-const configFile = "./config.json"
+const path = require("path")
+const configDir = path.resolve(__dirname, "./config.json")
 
-const answer = (status, data) => {
+const response = (status, data) => {
 	return {
-		status: status,
+		status,
 		[status ? "data" : "error"]: data,
 	}
 }
 
 const zeroFirst = number => {
 	let offset = 2
-	let numberLength = String(number).length
+	const numberLength = String(number).length
 	if (numberLength > offset) {
 		offset = numberLength
 	}
@@ -20,15 +20,17 @@ const zeroFirst = number => {
 }
 
 const getDateString = () => {
-	let d = new Date()
-	return `${zeroFirst(d.getDate())}.${zeroFirst(d.getMonth() + 1)}.${d.getFullYear()} ${zeroFirst(d.getHours())}:${zeroFirst(d.getMinutes())}:${zeroFirst(d.getSeconds())}`
+	const d = new Date()
+	return `${zeroFirst(d.getDate())}.${zeroFirst(d.getMonth() + 1)}.${d.getFullYear()} ${zeroFirst(
+		d.getHours()
+	)}:${zeroFirst(d.getMinutes())}:${zeroFirst(d.getSeconds())}`
 }
 
 const msToTime = (ms = 0) => {
-	let result = []
-	let h = Math.floor(ms / 1000 / 60 / 60);
-	let m = Math.floor((ms / 1000 / 60 / 60 - h) * 60);
-	let s = Math.floor(((ms / 1000 / 60 / 60 - h) * 60 - m) * 60);
+	const result = []
+	const h = Math.floor(ms / 1000 / 60 / 60)
+	const m = Math.floor((ms / 1000 / 60 / 60 - h) * 60)
+	const s = Math.floor(((ms / 1000 / 60 / 60 - h) * 60 - m) * 60)
 
 	if (h > 0) {
 		result.push(h)
@@ -39,41 +41,85 @@ const msToTime = (ms = 0) => {
 	return result.join(":")
 }
 
+const getCaption = ({name, artists, progress, duration, showProgress, liked, isPaused}) =>
+	[
+		isPaused ? "⏸" : "🎵",
+		`*${name}* — ${artists}`,
+		liked && "❤️",
+		showProgress && !isPaused && `\\[${progress}/${duration}]`,
+	]
+		.filter(item => typeof item === "string" && item.length > 0)
+		.join(" ")
+
+const getSongLog = ({name, artists}) => `${name} — ${artists}`
+
+const getReplyMarkup = ({/*url, */ id}) => ({
+	inline_keyboard: [
+		[
+			/*{
+				text: "Spotify",
+				url: url,
+			},
+			{
+				text: "Другие сервисы",
+				url: `https://song.link/s/${id}`,
+			},*/
+			{
+				text: "Слушать",
+				url: `https://song.link/s/${id}`,
+			},
+		],
+	],
+})
+
 const log = {
 	red: (...args) => {
-		logger.color("white").bgColor("red").log(getDateString(), ...args);
+		logger
+			.color("white")
+			.bgColor("red")
+			.log(getDateString(), ...args)
 	},
 	green: (...args) => {
-		logger.color("white").bgColor("green").log(getDateString(), ...args);
+		logger
+			.color("white")
+			.bgColor("green")
+			.log(getDateString(), ...args)
 	},
 	def: (...args) => {
-		logger.color("yellow").bold().log(getDateString(), ...args);
+		logger
+			.color("yellow")
+			.bold()
+			.log(getDateString(), ...args)
 	},
 }
 
 const config = {
 	read: () => {
-		return JSON.parse(fs.readFileSync(configFile))
+		return JSON.parse(fs.readFileSync(configDir))
 	},
 	write: json => {
-		fs.writeFileSync(configFile, JSON.stringify(json))
+		fs.writeFileSync(configDir, JSON.stringify(json, null, "\t"))
 	},
 	get: key => {
-		let configJson = config.read()
+		const configJson = config.read()
 		return configJson[key]
 	},
 	set: (key, value) => {
-		let configJson = config.read()
+		const configJson = config.read()
 		configJson[key] = value
 		config.write(configJson)
-	}
+	},
 }
 
 module.exports = {
-	answer,
+	response,
 	zeroFirst,
 	msToTime,
+	getCaption,
+	getSongLog,
+	getReplyMarkup,
 	getDateString,
 	log,
 	config,
+	configDir,
 }

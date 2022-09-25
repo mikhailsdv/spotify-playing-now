@@ -6,6 +6,7 @@
 	"accessToken": "",
 	"refreshToken": "",
 	"redirectUri": "https://example.com/",
+	"showProgress": true,
 	"updateDelay": 5000,
 	"pauseDelay": 10000,
 	"retryDelay": 3000,
