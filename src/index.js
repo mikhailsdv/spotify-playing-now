@@ -83,24 +83,24 @@ const start = () => {
 	let messageId = env.messageId
 	let wasPaused = false
 	const editMessage = async () => {
-		const playingNow = await getMyCurrentPlaybackState()
-		if (playingNow.status) {
-			const song = playingNow.data
-			const caption = getCaption({
-				name: song.name,
-				artists: song.artists,
-				showProgress: env.showProgress,
-				progress: song.progress,
-				duration: song.duration,
-				liked: song.liked,
-				isPaused: false,
-			})
-			const extra = {
-				reply_markup: getReplyMarkup(song),
-				parse_mode: "Markdown",
-			}
-			if (messageId) {
-				try {
+		try {
+			const playingNow = await getMyCurrentPlaybackState()
+			if (playingNow.status) {
+				const song = playingNow.data
+				const caption = getCaption({
+					name: song.name,
+					artists: song.artists,
+					showProgress: env.showProgress,
+					progress: song.progress,
+					duration: song.duration,
+					liked: song.liked,
+					isPaused: false,
+				})
+				const extra = {
+					reply_markup: getReplyMarkup(song),
+					parse_mode: "Markdown",
+				}
+				if (messageId) {
 					if (song.update === "all") {
 						log.def(getSongLog({name: song.name, artists: song.artists}))
 						await telegram.editMessageMedia(
@@ -125,51 +125,51 @@ const start = () => {
 						)
 					}
 					setTimeout(editMessage, env.updateDelay)
-				} catch (err) {
-					console.log(err)
-					log.def(`Retrying after ${env.retryDelay}ms...`)
+				} else {
+					log.def(getSongLog({name: song.name, artists: song.artists}))
+					const message = await telegram.sendPhoto(env.chanelId, song.image, {
+						caption,
+						...extra,
+					})
+					messageId = message.message_id
+					config.set("messageId", messageId)
 					setTimeout(editMessage, env.updateDelay)
 				}
+				wasPaused = false
+			} else if (playingNow.error.message === "paused") {
+				if (!wasPaused) {
+					log.def("Paused.")
+					wasPaused = true
+					prevSong.id &&
+						(await telegram.editMessageCaption(
+							env.chanelId,
+							messageId,
+							null,
+							getCaption({
+								name: prevSong.name,
+								artists: prevSong.artists,
+								progress: null,
+								duration: null,
+								liked: prevSong.liked,
+								isPaused: true,
+							}),
+							{
+								reply_markup: getReplyMarkup(prevSong),
+								parse_mode: "Markdown",
+							}
+						))
+				}
+				setTimeout(editMessage, env.pauseDelay)
 			} else {
-				log.def(getSongLog({name: song.name, artists: song.artists}))
-				const message = await telegram.sendPhoto(env.chanelId, song.image, {
-					caption,
-					...extra,
-				})
-				messageId = message.message_id
-				config.set("messageId", messageId)
-				setTimeout(editMessage, env.updateDelay)
+				log.red(playingNow.error.message)
+				log.red(playingNow.error.data)
+				log.def(`Retrying after ${env.retryDelay}ms...`)
+				setTimeout(editMessage, env.retryDelay)
 			}
-			wasPaused = false
-		} else if (playingNow.error.message === "paused") {
-			if (!wasPaused) {
-				log.def("Paused.")
-				wasPaused = true
-				prevSong.id &&
-					(await telegram.editMessageCaption(
-						env.chanelId,
-						messageId,
-						null,
-						getCaption({
-							name: prevSong.name,
-							artists: prevSong.artists,
-							progress: null,
-							duration: null,
-							liked: prevSong.liked,
-							isPaused: true,
-						}),
-						{
-							reply_markup: getReplyMarkup(prevSong),
-							parse_mode: "Markdown",
-						}
-					))
-			}
-			setTimeout(editMessage, env.pauseDelay)
-		} else {
-			log.red(playingNow.error.message)
-			log.red(playingNow.error.data)
+		} catch (err) {
+			log.red(err)
 			log.def(`Retrying after ${env.retryDelay}ms...`)
-			setTimeout(editMessage, env.retryDelay)
+			setTimeout(editMessage, env.updateDelay)
 		}
 	}
 	editMessage()
