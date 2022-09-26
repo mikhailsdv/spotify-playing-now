@@ -5,12 +5,12 @@ You can see how it looks [here](https://t.me/FilteredInternet/241), more details
 
 ## Difficulty level
 
--   If you had programming experience: 🟢 easy;
--   If you have no programming experience: 🟡 medium;
+-   If you had programming experience: 🟢 easy.
+-   If you have no programming experience: 🟡 medium.
 
 Before you start, I recommend that you read the instructions in full and proceed with an understanding of the complexity and your capabilities.
 
-## Guide
+## Installation and local launch
 
 1. Download and install [Node.js](https://nodejs.org/en/download/).
 2. [Download project files](https://github.com/mikhailsdv/spotify-playing-now/archive/main.zip) and unzip to some folder on your hard drive (or just clone the repo). It is better that the path contains only Latin characters without spaces.
